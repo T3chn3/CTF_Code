@@ -1,0 +1,102 @@
+import socket
+import operator
+from functools import reduce
+
+# create a socket object
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+# get the local machine name
+host = "simonsays.xxxx.xxx"
+port = 12345
+
+# connection to hostname on the port.
+s.connect((host, port))
+
+# receive data from the server
+data = s.recv(1024)
+print(data)
+
+# send the server a capital "Y"
+s.send(bytes("Y", "utf-8"))
+
+
+# process the server's messages in a loop
+while True:
+  data = s.recv(1024)
+
+  # check if the server closed the connection
+  if not data:
+    break
+# process the server's messages
+
+  #Simon Says Add
+  if data.decode().startswith("[>] Simon Says Add"):
+    # decode the bytes object and split the string at spaces
+    data_str = data.decode().split()
+    print(data_str)
+    # extract the numbers from the message
+    nums = data.split()[4:]
+    del nums[1]
+    print(nums)
+    # add the numbers and send the result
+    result = sum(map(int, nums))
+    #print(result)
+    #print("add")
+    s.send(str(result).encode("utf-8"))
+
+  #Simon Says Multiply
+  elif data.decode().startswith("[>] Simon Says Multiply"):
+    # extract the numbers from the message
+    nums = data.split()[4:]
+    del nums[1]
+    print(nums)
+    # multiply the numbers and send the result
+    result = reduce(operator.mul, map(int, nums))
+    #print(result)
+    #print("mult")
+    s.send(str(result).encode("utf-8"))
+
+  elif data.decode().startswith("[>] Simon Says Subtract"):
+    # extract the numbers from the message
+    nums = data.split()[4:]
+    del nums[1]
+    print(nums)
+    # subtract the numbers and send the result
+    result = reduce(operator.sub, map(int, nums))
+    #print(result)
+    #print("sub")
+    s.send(str(result).encode("utf-8"))
+
+  elif data.decode().startswith("[>] Add"):
+    # don't send a response until the server says "Ok, you're right"
+    while True:
+      data = s.recv(1024)
+      if data.decode().startswith("[+] Ok, you're right"):
+        break
+
+  elif data.decode().startswith("[>] Multiply"):
+    # don't send a response until the server says "Ok, you're right"
+    while True:
+      data = s.recv(1024)
+      if data.decode().startswith("[+] Ok, you're right"):
+        break
+
+  elif data.decode().startswith("[>] Subtract"):
+    # don't send a response until the server says "Ok, you're right"
+    while True:
+      data = s.recv(1024)
+      if data.decode().startswith("[+] Ok, you're right"):
+        break
+
+  elif data.decode().startswith("[>] Simon Says Repeat"):
+    # extract the numbers from the message
+    nums = data.split()[4:]
+    # repeat the numbers and send the result
+    result = nums
+    s.send(nums[0] +" and ".encode("utf-8")+nums[2])
+    #s.send(str(result).encode())
+  else:
+    print("Unrecognized message from server:", data.decode())
+
+# close the connection
+s.close()
